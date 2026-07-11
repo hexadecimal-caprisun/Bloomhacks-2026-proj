@@ -7,25 +7,30 @@ from tensorflow import keras
 class recycle_detector():
     # class definition
     def __init__(self, model_path, classes):
-        self.model = keras.models.load_model(model_path) #load model
-        self.classes = classes 
+        try:
+            self.model = keras.models.load_model(model_path) #load model
+            self.classes = classes 
 
+        except Exception as e:
+            print("FUCK YOU")
+        
         self.frame_queue = queue.Queue(maxsize=1) #queue init with maxsize 1
 
         self.predictions = None
-        self.lock = threading.Lock()
+        self.lock = threading.Lock()            
         self.running = True
-
     def preprocess(self, frame):
         img = cv2.resize(frame, (256, 256))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        return img 
+        img = cv2.astype(np.float32)/255.0
+        return np.expand_dims(img, axis=0)
+
     def infer_loop(self):
         while self.running:
             try:
-                frame = self.frame_queue.get(timeout=5)
+                frame = self.frame_queue.get()
                 input_data = self.preprocess(frame)
-
+                time.sleep(1)
                 with self.lock:
                     self.predictions = preds
 
@@ -36,12 +41,17 @@ class recycle_detector():
 
 def main():
     class_labels = ["battery", "biological", "cardboard", "clothes", "glass", "metal", "paper", "plastic", "shoes", "trash"]
-    detector = recycle_detector('./model.h5', class_labels)
+    detector = recycle_detector('model.h5', class_labels)
     inference_thread = threading.Thread(target=detector.infer_loop)
     inference_thread.daemon = True
     inference_thread.start()
 
     cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        cap = cv2.VideoCapture(0, CAP_DSHOW)
+    if not cap.isOpened():
+        print("can't open")
+
     frame_count = 0
 
     while cap.isOpened():
@@ -74,5 +84,7 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    detector.running = False
+    inference_thread.join()
     cap.release()
     cv2.destroyAllWindows()
