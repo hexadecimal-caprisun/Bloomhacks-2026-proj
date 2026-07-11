@@ -1,0 +1,32 @@
+main{
+    background: linear-gradient(#ffffff 0%, #04AD23 100%);
+    min-height: 200vh;
+
+    margin: 0;
+    padding: 0;
+}
+
+html, body{
+    overscroll-behavior: none;
+    margin: 0;
+}
+
+h1{
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 4.5rem;
+    color:black;
+    text-align: center;
+}
+
+h2{
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 3.5rem;
+    color: black;
+    text-align: center;
+}
+
+#camera{
+    width: 50%;
+    display: block;
+    margin: 0 auto;
+}
